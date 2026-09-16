@@ -13,6 +13,22 @@ type WallContextValue = {
 
 const WallContext = createContext<WallContextValue | null>(null);
 
+function isWallPost(value: unknown): value is WallPost {
+  if (!value || typeof value !== "object") return false;
+  const post = value as Partial<WallPost>;
+  return typeof post.id === "string"
+    && typeof post.message === "string"
+    && typeof post.author === "string"
+    && typeof post.category === "string"
+    && typeof post.color === "string"
+    && typeof post.createdAt === "string"
+    && typeof post.reactions === "number"
+    && ["approved", "pending", "rejected"].includes(post.status ?? "")
+    && typeof post.isSeed === "boolean"
+    && typeof post.x === "number"
+    && typeof post.y === "number";
+}
+
 export function WallProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<WallPost[]>(seedPosts);
   const [reactedIds, setReactedIds] = useState<string[]>([]);
@@ -25,21 +41,26 @@ export function WallProvider({ children }: { children: ReactNode }) {
       const reactions = localStorage.getItem(REACTIONS_KEY);
 
       if (saved) {
-        const parsed = JSON.parse(saved) as WallPost[] | null;
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setPosts(parsed);
-        } else if (Array.isArray(parsed) && parsed.length === 0) {
+        const parsed: unknown = JSON.parse(saved);
+        const validPosts = Array.isArray(parsed) ? parsed.filter(isWallPost) : [];
+        if (validPosts.length > 0) {
+          setPosts(validPosts);
+        } else {
           localStorage.removeItem(STORAGE_KEY);
           setPosts(seedPosts);
         }
       }
 
       if (reactions) {
-        const parsed = JSON.parse(reactions) as string[] | null;
-        if (Array.isArray(parsed)) setReactedIds(parsed);
+        const parsed: unknown = JSON.parse(reactions);
+        if (Array.isArray(parsed)) {
+          setReactedIds(parsed.filter((id): id is string => typeof id === "string"));
+        }
       }
     } catch {
-      toast.error("Saved notes could not be loaded.");
+      localStorage.removeItem(STORAGE_KEY);
+      setPosts(seedPosts);
+      toast.error("Saved notes could not be loaded. Demo notes restored.");
     }
     setHydrated(true);
   }, []);
@@ -71,7 +92,6 @@ export function WallProvider({ children }: { children: ReactNode }) {
     };
     setPosts((current) => [post, ...current]);
     localStorage.setItem(LAST_POST_KEY, JSON.stringify({ text: normalized, at: now }));
-    // Production connection point: replace local state with authenticated database writes and server moderation.
     return { ok: true, status };
   }, []);
 
