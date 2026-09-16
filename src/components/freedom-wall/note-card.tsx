@@ -4,7 +4,15 @@ import { cn } from "@/lib/utils";
 import { categoryFor, noteColors, type WallPost } from "@/lib/freedom-wall";
 
 export function NoteCard({ post, reacted = false, onReact, className, large = false }: { post: WallPost; reacted?: boolean; onReact?: (id: string) => void; className?: string; large?: boolean }) {
-  const category = categoryFor(post.category);
+  const category = categoryFor(post.category) ?? { emoji: "💬", label: "Note" };
+  let formattedDate = "";
+try {
+  formattedDate = post?.createdAt 
+    ? new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric" }).format(new Date(post.createdAt))
+    : "";
+} catch {
+  formattedDate = "Recently";
+}
   const color = noteColors.find((item) => item.id === post.color)?.className ?? "bg-note-yellow";
   const rotation = ["-rotate-1", "rotate-1", "-rotate-2", "rotate-2", "rotate-0"][post.id.length % 5];
   const date = new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric" }).format(new Date(post.createdAt));
