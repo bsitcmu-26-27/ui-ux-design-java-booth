@@ -14,9 +14,10 @@ const MAX_FILE = 2 * 1024 * 1024;
 export function PostComposer() {
   const { composerOpen, setComposerOpen, addPost } = useWall();
   const [message, setMessage] = useState(""); const [author, setAuthor] = useState("");
+  const [passcode, setPasscode] = useState("");
   const [category, setCategory] = useState<CategoryId>("random"); const [color, setColor] = useState<NoteColor>("yellow");
   const [media, setMedia] = useState<Media>(); const fileRef = useRef<HTMLInputElement>(null);
-  const reset = () => { setMessage(""); setAuthor(""); setCategory("random"); setColor("yellow"); setMedia(undefined); };
+  const reset = () => { setMessage(""); setAuthor(""); setPasscode(""); setCategory("random"); setColor("yellow"); setMedia(undefined); };
   const onFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]; if (!file) return;
     if (!file.type.startsWith("image/")) { toast.error("Choose an image"); return; }
@@ -24,7 +25,9 @@ export function PostComposer() {
     const reader = new FileReader(); reader.onload = () => setMedia({ type: "image", dataUrl: String(reader.result), name: file.name }); reader.readAsDataURL(file);
   };
   const submit = async (event: FormEvent) => {
-    event.preventDefault(); const result = await addPost({ message, author, category, color, ...(media ? { media } : {}) });
+    event.preventDefault();
+    if (!passcode.trim()) { toast.error("Enter the booth passcode to post."); return; }
+    const result = await addPost({ message, author, category, color, ...(media ? { media } : {}) }, passcode.trim());
     if (!result.ok) { toast.error(result.error); return; }
     setComposerOpen(false); reset();
     if (result.status === "pending") toast("Your note is safe with us", { description: "It needs a quick review before appearing on the wall." });
@@ -41,6 +44,10 @@ export function PostComposer() {
           <div className="space-y-2"><Label htmlFor="name">Display name <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="name" value={author} onChange={(e) => setAuthor(e.target.value)} maxLength={40} placeholder="Anonymous yarn?" className="bg-surface" /></div>
           <div className="space-y-2"><Label>Photo or video <span className="font-normal text-muted-foreground">(optional, max 2 MB)</span></Label><input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="sr-only" />{media ? <div className="flex items-center gap-3 rounded-md border bg-surface p-3"><div className="size-14 overflow-hidden rounded bg-muted">{media.type === "image" ? <img src={media.dataUrl} alt="Upload preview" className="h-full w-full object-cover" /> : <video src={media.dataUrl} className="h-full w-full object-cover" />}</div><span className="min-w-0 flex-1 truncate text-sm">{media.name}</span><Button type="button" variant="ghost" size="icon" onClick={() => setMedia(undefined)} aria-label="Remove attachment"><Trash2 /></Button></div> : <Button type="button" variant="outline" className="w-full border-dashed bg-surface" onClick={() => fileRef.current?.click()}><ImagePlus /> Add from your device</Button>}</div>
           <div className="flex gap-3 rounded-md bg-accent/60 p-3 text-sm text-accent-foreground"><Sparkles className="mt-0.5 size-4 shrink-0" /><p><strong>Keep it kind.</strong> No names, bullying, threats, or private information. Some notes may pause for review.</p></div>
+          <div className="space-y-2">
+            <Label htmlFor="passcode">Booth passcode</Label>
+            <Input id="passcode" type="password" value={passcode} onChange={(e) => setPasscode(e.target.value)} placeholder="Ask a volunteer at the booth" className="bg-surface" />
+          </div>
           <Button type="submit" size="lg" className="w-full">Pin it to the wall</Button>
         </form>
       </DialogContent>
