@@ -30,12 +30,12 @@
   --background: oklch(.975 .012 88); --foreground: oklch(.22 .035 151);
   --card: oklch(.99 .008 88); --card-foreground: var(--foreground); --popover: var(--card); --popover-foreground: var(--foreground);
   --primary: #461D7C; --primary-foreground: oklch(.98 .008 90);
-  --secondary: oklch(.91 .04 84); --secondary-foreground: oklch(.28 .05 115);
+  --secondary: oklch(.91 .055 300); --secondary-foreground: oklch(.28 .085 300);
   --muted: oklch(.93 .018 88); --muted-foreground: oklch(.48 .03 118);
-  --accent: oklch(.91 .055 105); --accent-foreground: oklch(.27 .055 135);
+  --accent: oklch(.92 .07 296); --accent-foreground: oklch(.26 .09 300);
   --destructive: oklch(.56 .2 28); --destructive-foreground: oklch(.98 .01 90);
   --border: oklch(.84 .025 90); --input: oklch(.82 .028 90); --ring: var(--primary);
-  --surface: oklch(.995 .006 88); --gold: oklch(.79 .14 86); --gold-foreground: oklch(.25 .055 90);
+  --surface: oklch(.995 .01 300); --gold: oklch(.79 .14 86); --gold-foreground: oklch(.25 .055 90);
   --success: oklch(.63 .13 145); --warning: oklch(.62 .15 60); --heart: oklch(.58 .2 22);
   --note-yellow: oklch(.93 .11 98); --note-pink: oklch(.91 .07 8); --note-blue: oklch(.9 .055 235);
   --note-mint: oklch(.91 .075 156); --note-peach: oklch(.91 .09 57); --note-lilac: oklch(.9 .06 302);
