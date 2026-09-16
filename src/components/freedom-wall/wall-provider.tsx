@@ -1,30 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import {
-  isCategoryId,
-  isNoteColor,
-  isPostStatus,
-  LAST_POST_KEY,
-  REACTIONS_KEY,
-  STORAGE_KEY,
-  blockedKeywords,
-  seedPosts,
-  type WallPost,
-} from "@/lib/freedom-wall";
+import { REACTIONS_KEY, type WallPost } from "@/lib/freedom-wall";
 
+const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
 type NewPost = Omit<WallPost, "id" | "createdAt" | "reactions" | "status" | "isSeed" | "x" | "y">;
 type SubmitResult = { ok: true; status: "approved" | "pending" } | { ok: false; error: string };
 type WallContextValue = {
-  posts: WallPost[];
-  reactedIds: string[];
-  hydrated: boolean;
-  addPost: (post: NewPost) => SubmitResult;
-  react: (id: string) => void;
-  moderate: (id: string, status: WallPost["status"]) => void;
-  deletePost: (id: string) => void;
-  resetDemo: () => void;
-  composerOpen: boolean;
-  setComposerOpen: (open: boolean) => void;
+  posts: WallPost[]; reactedIds: string[]; hydrated: boolean;
+  addPost: (post: NewPost) => Promise<SubmitResult>; react: (id: string) => void;
+  moderate: (id: string, status: WallPost["status"]) => void; deletePost: (id: string) => void;
+  resetDemo: () => void; composerOpen: boolean; setComposerOpen: (open: boolean) => void;
 };
 
 const WallContext = createContext<WallContextValue | null>(null);
@@ -79,54 +64,117 @@ function newId() {
 }
 
 export function WallProvider({ children }: { children: ReactNode }) {
-  const [posts, setPosts] = useState<WallPost[]>(seedPosts);
+  const [posts, setPosts] = useState<WallPost[]>([]);
   const [reactedIds, setReactedIds] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
 
-  useEffect(() => {
+  const fetchPosts = useCallback(async () => {
     try {
-      setPosts(readStoredPosts());
-      setReactedIds(readStoredReactionIds());
+      const res = await fetch(`${API_BASE}/posts`);
+      if (!res.ok) throw new Error("Failed to load posts");
+      setPosts((await res.json()) as WallPost[]);
     } catch {
-      setPosts(seedPosts);
-      setReactedIds([]);
-      toast.error("Saved notes could not be loaded. Demo notes restored.");
-    } finally { setHydrated(true); }
+      toast.error("Could not load the wall. Check your connection.");
+    }
   }, []);
 
-  useEffect(() => { if (hydrated) persist(STORAGE_KEY, posts); }, [posts, hydrated]);
-  useEffect(() => { if (hydrated) persist(REACTIONS_KEY, reactedIds); }, [reactedIds, hydrated]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const reactions = localStorage.getItem(REACTIONS_KEY);
+        if (reactions) setReactedIds(JSON.parse(reactions) as string[]);
+      } catch { /* corrupted local reaction cache, safe to ignore */ }
+      await fetchPosts();
+      setHydrated(true);
+    })();
+  }, [fetchPosts]);
 
-  const addPost = useCallback((draft: NewPost): SubmitResult => {
+  useEffect(() => {
+    if (hydrated) localStorage.setItem(REACTIONS_KEY, JSON.stringify(reactedIds));
+  }, [reactedIds, hydrated]);
+
+  const addPost = useCallback(async (draft: NewPost): Promise<SubmitResult> => {
     const message = draft.message.trim();
     if (!message) return { ok: false, error: "Write a thought before posting." };
     if (message.length > 500) return { ok: false, error: "Keep your thought within 500 characters." };
-    const normalized = message.toLowerCase().replace(/\s+/g, " ");
-    const now = Date.now();
-    try {
-      const previous = JSON.parse(localStorage.getItem(LAST_POST_KEY) ?? "null") as { text?: unknown; at?: unknown } | null;
-      if (typeof previous?.text === "string" && typeof previous.at === "number") {
-        if (previous.text === normalized && now - previous.at < 10 * 60 * 1000) return { ok: false, error: "That looks like a recent duplicate. Try sharing something new." };
-        if (now - previous.at < 8000) return { ok: false, error: "Take a breath before posting another note." };
-      }
-    } catch { try { localStorage.removeItem(LAST_POST_KEY); } catch { /* Ignore unavailable storage. */ } }
 
-    const status: "approved" | "pending" = blockedKeywords.some((keyword) => normalized.includes(keyword)) ? "pending" : "approved";
-    const post: WallPost = { ...draft, message, author: draft.author.trim() || "Anonymous yarn?", id: newId(), createdAt: new Date().toISOString(), reactions: 0, status, isSeed: false, x: 140 + Math.random() * 1250, y: 120 + Math.random() * 850 };
-    setPosts((current) => [post, ...current]);
-    persist(LAST_POST_KEY, { text: normalized, at: now });
-    return { ok: true, status };
+    const form = new FormData();
+    form.append("message", message);
+    form.append("author", draft.author.trim() || "Anonymous yarn?");
+    form.append("category", draft.category);
+    form.append("color", draft.color);
+    form.append("x", String(140 + Math.random() * 1250));
+    form.append("y", String(120 + Math.random() * 850));
+    if (draft.media) {
+      // media.dataUrl is a base64 data: URL from the composer's preview step —
+      // fetch() can turn that back into a real Blob to send as multipart
+      const blob = await (await fetch(draft.media.dataUrl)).blob();
+      form.append("media", blob, draft.media.name);
+    }
+
+    try {
+
+      const res = await fetch(`${API_BASE}/posts`, { method: "POST", body: form });
+      if (!res.ok) {
+        if (res.status === 429) return { ok: false, error: "Take a breath before posting again." };
+        const err = await res.json().catch(() => ({ error: "Something went wrong." }));
+        return { ok: false, error: err.error ?? "Something went wrong." };
+      }
+      const created = (await res.json()) as WallPost;
+      setPosts((current) => [created, ...current]);
+      return { ok: true, status: created.status as "approved" | "pending" };
+    } catch {
+      return { ok: false, error: "Could not reach the server. Try again." };
+    }
+
   }, []);
 
-  const react = useCallback((id: string) => {
+  const react = useCallback(async (id: string) => {
     if (reactedIds.includes(id)) { toast("You already sent love to this note."); return; }
     setPosts((current) => current.map((post) => post.id === id ? { ...post, reactions: post.reactions + 1 } : post));
-    setReactedIds((current) => current.includes(id) ? current : [...current, id]);
+    setReactedIds((current) => [...current, id]);
+    try {
+      const res = await fetch(`${API_BASE}/posts/${id}/react`, { method: "POST" });
+      if (!res.ok) throw new Error();
+    } catch {
+      toast.error("Reaction didn't save — check your connection.");
+    }
   }, [reactedIds]);
-  const moderate = useCallback((id: string, status: WallPost["status"]) => setPosts((current) => current.map((post) => post.id === id ? { ...post, status } : post)), []);
-  const deletePost = useCallback((id: string) => setPosts((current) => current.filter((post) => post.id !== id)), []);
-  const resetDemo = useCallback(() => { setPosts(seedPosts); setReactedIds([]); try { localStorage.removeItem(LAST_POST_KEY); } catch { /* Ignore unavailable storage. */ } persist(STORAGE_KEY, seedPosts); persist(REACTIONS_KEY, []); toast.success("Demo wall restored."); }, []);
+
+  const moderate = useCallback(async (id: string, status: WallPost["status"]) => {
+    setPosts((current) => current.map((post) => post.id === id ? { ...post, status } : post));
+    try {
+      const res = await fetch(`${API_BASE}/posts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "X-API-Key": getAdminKey() },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      toast.error("Moderation action didn't save.");
+      fetchPosts(); // resync since the optimistic update may be wrong now
+    }
+  }, [fetchPosts]);
+
+  const deletePost = useCallback(async (id: string) => {
+    setPosts((current) => current.filter((post) => post.id !== id));
+    try {
+      const res = await fetch(`${API_BASE}/posts/${id}`, {
+        method: "DELETE",
+        headers: { "X-API-Key": getAdminKey() },
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      toast.error("Delete didn't save — refreshing.");
+      fetchPosts();
+    }
+  }, [fetchPosts]);
+
+  const resetDemo = useCallback(() => {
+    fetchPosts();
+    toast.success("Wall refreshed.");
+  }, [fetchPosts]);
 
   const value = useMemo(() => ({ posts, reactedIds, hydrated, addPost, react, moderate, deletePost, resetDemo, composerOpen, setComposerOpen }), [posts, reactedIds, hydrated, addPost, react, moderate, deletePost, resetDemo, composerOpen]);
   return <WallContext.Provider value={value}>{children}</WallContext.Provider>;
