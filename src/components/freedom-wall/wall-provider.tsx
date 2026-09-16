@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { toast } from "sonner";
 import { REACTIONS_KEY, type WallPost } from "@/lib/freedom-wall";
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
+const API_BASE = import.meta.env.VITE_API_URL ?? "https://experienced-anthe-nisheri-ascar-2970fad8.koyeb.app/";
 type NewPost = Omit<WallPost, "id" | "createdAt" | "reactions" | "status" | "isSeed" | "x" | "y">;
 type SubmitResult = { ok: true; status: "approved" | "pending" } | { ok: false; error: string };
 type WallContextValue = {
