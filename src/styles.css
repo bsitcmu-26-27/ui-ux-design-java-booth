@@ -1,0 +1,93 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "DM Sans", sans-serif;
+  --font-display: "Newsreader", serif;
+  --font-hand: "Kalam", cursive;
+  --radius-sm: calc(var(--radius) - 2px); --radius-md: var(--radius); --radius-lg: calc(var(--radius) + 2px);
+  --color-background: var(--background); --color-foreground: var(--foreground);
+  --color-card: var(--card); --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover); --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary); --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent); --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive); --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border); --color-input: var(--input); --color-ring: var(--ring);
+  --color-surface: var(--surface); --color-gold: var(--gold); --color-gold-foreground: var(--gold-foreground);
+  --color-success: var(--success); --color-warning: var(--warning); --color-heart: var(--heart);
+  --color-note-yellow: var(--note-yellow); --color-note-pink: var(--note-pink); --color-note-blue: var(--note-blue);
+  --color-note-mint: var(--note-mint); --color-note-peach: var(--note-peach); --color-note-lilac: var(--note-lilac);
+  --color-note-ink: var(--note-ink); --color-note-muted: var(--note-muted); --color-note-media: var(--note-media);
+  --color-tape: var(--tape); --color-pin: var(--pin);
+}
+:root {
+  --radius: .4rem;
+  --background: oklch(.975 .012 88); --foreground: oklch(.22 .035 151);
+  --card: oklch(.99 .008 88); --card-foreground: var(--foreground); --popover: var(--card); --popover-foreground: var(--foreground);
+  --primary: oklch(.34 .105 149); --primary-foreground: oklch(.98 .008 90);
+  --secondary: oklch(.91 .04 84); --secondary-foreground: oklch(.28 .05 115);
+  --muted: oklch(.93 .018 88); --muted-foreground: oklch(.48 .03 118);
+  --accent: oklch(.91 .055 105); --accent-foreground: oklch(.27 .055 135);
+  --destructive: oklch(.56 .2 28); --destructive-foreground: oklch(.98 .01 90);
+  --border: oklch(.84 .025 90); --input: oklch(.82 .028 90); --ring: var(--primary);
+  --surface: oklch(.995 .006 88); --gold: oklch(.79 .14 86); --gold-foreground: oklch(.25 .055 90);
+  --success: oklch(.63 .13 145); --warning: oklch(.62 .15 60); --heart: oklch(.58 .2 22);
+  --note-yellow: oklch(.93 .11 98); --note-pink: oklch(.91 .07 8); --note-blue: oklch(.9 .055 235);
+  --note-mint: oklch(.91 .075 156); --note-peach: oklch(.91 .09 57); --note-lilac: oklch(.9 .06 302);
+  --note-ink: oklch(.24 .035 95); --note-muted: oklch(.43 .035 87); --note-media: oklch(.96 .015 88);
+  --tape: oklch(.93 .045 87 / .8); --pin: oklch(.55 .19 28);
+}
+@layer base {
+  * { border-color: var(--color-border); }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--color-background); color: var(--color-foreground); font-family: var(--font-sans); letter-spacing: 0; }
+  button, a, input, textarea, select { letter-spacing: 0; }
+  ::selection { background: var(--color-gold); color: var(--color-gold-foreground); }
+}
+@utility hero-paper {
+  background-color: var(--color-background);
+  background-image: linear-gradient(var(--color-border) 1px, transparent 1px), linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+@utility bg-cork {
+  /* Canvas / whiteboard surface: deep ember red-orange base with layered
+     warm flame glows so pastel sticky notes pop against the firelight. */
+  background-color: oklch(.3 .12 32);
+  background-image:
+    radial-gradient(ellipse 55% 45% at 18% 12%, oklch(.55 .19 38 / .5), transparent 70%),
+    radial-gradient(ellipse 45% 55% at 82% 22%, oklch(.62 .2 55 / .42), transparent 70%),
+    radial-gradient(ellipse 70% 50% at 50% 95%, oklch(.5 .2 30 / .5), transparent 72%);
+}
+@utility flame-glow {
+  /* Soft blurred ambient flame layer sitting between the ember base and the
+     sticky notes — the notes stay crisp, only the glow is blurred. */
+  pointer-events: none;
+  filter: blur(52px) saturate(125%);
+  opacity: .85;
+  background-image:
+    radial-gradient(ellipse 40% 35% at 22% 18%, oklch(.7 .19 50 / .8), transparent 70%),
+    radial-gradient(ellipse 35% 45% at 78% 30%, oklch(.75 .17 70 / .7), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 45% 80%, oklch(.62 .21 35 / .75), transparent 72%),
+    radial-gradient(ellipse 30% 30% at 60% 55%, oklch(.82 .14 90 / .55), transparent 70%),
+    radial-gradient(ellipse 25% 25% at 10% 70%, oklch(.58 .2 25 / .7), transparent 70%);
+  animation: flame-drift 16s ease-in-out infinite alternate;
+}
+@keyframes flame-drift {
+  0% { transform: scale(1) translate(0, 0); opacity: .8; }
+  45% { transform: scale(1.06) translate(2%, -1.5%); opacity: .95; }
+  100% { transform: scale(1.02) translate(-2%, 1.5%); opacity: .85; }
+}
+@utility note-card {
+  border: 1px solid color-mix(in oklab, var(--color-note-ink) 8%, transparent);
+  border-radius: 2px;
+  box-shadow: 0 13px 24px -15px color-mix(in oklab, var(--color-note-ink) 38%, transparent), 0 2px 3px color-mix(in oklab, var(--color-note-ink) 10%, transparent);
+  transition: transform .2s ease, box-shadow .2s ease;
+  &:hover { transform: rotate(0deg) translateY(-3px); box-shadow: 0 18px 28px -14px color-mix(in oklab, var(--color-note-ink) 44%, transparent); z-index: 2; }
+}
+@utility no-scrollbar { scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
