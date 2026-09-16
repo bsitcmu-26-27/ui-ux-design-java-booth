@@ -12,6 +12,11 @@ type WallContextValue = {
   resetDemo: () => void; composerOpen: boolean; setComposerOpen: (open: boolean) => void;
 };
 
+function withAbsoluteMedia(post: WallPost): WallPost {
+  if (!post.media) return post;
+  return { ...post, media: { ...post.media, dataUrl: `${API_BASE}${post.media.dataUrl}` } };
+}
+
 const WallContext = createContext<WallContextValue | null>(null);
 
 function isWallPost(value: unknown): value is WallPost {
@@ -73,7 +78,8 @@ export function WallProvider({ children }: { children: ReactNode }) {
     try {
       const res = await fetch(`${API_BASE}/posts`);
       if (!res.ok) throw new Error("Failed to load posts");
-      setPosts((await res.json()) as WallPost[]);
+      const raw = (await res.json()) as WallPost[];
+      setPosts(raw.map(withAbsoluteMedia));
     } catch {
       toast.error("Could not load the wall. Check your connection.");
     }
@@ -122,7 +128,7 @@ export function WallProvider({ children }: { children: ReactNode }) {
         return { ok: false, error: err.error ?? "Something went wrong." };
       }
       const created = (await res.json()) as WallPost;
-      setPosts((current) => [created, ...current]);
+      setPosts((current) => [withAbsoluteMedia(created), ...current]);
       return { ok: true, status: created.status as "approved" | "pending" };
     } catch {
       return { ok: false, error: "Could not reach the server. Try again." };
