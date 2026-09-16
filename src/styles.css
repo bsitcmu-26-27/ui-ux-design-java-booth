@@ -36,9 +36,9 @@
   --destructive: oklch(.56 .2 28); --destructive-foreground: oklch(.98 .01 90);
   --border: oklch(.84 .025 90); --input: oklch(.82 .028 90); --ring: var(--primary);
   --surface: oklch(.995 .01 300); --gold: oklch(.79 .14 86); --gold-foreground: oklch(.25 .055 90);
-  --success: oklch(.63 .13 145); --warning: oklch(.62 .15 60); --heart: oklch(.58 .2 22);
+  --success: oklch(.62 .14 302); --warning: oklch(.62 .15 60); --heart: oklch(.58 .2 22);
   --note-yellow: oklch(.93 .11 98); --note-pink: oklch(.91 .07 8); --note-blue: oklch(.9 .055 235);
-  --note-mint: oklch(.91 .075 156); --note-peach: oklch(.91 .09 57); --note-lilac: oklch(.9 .06 302);
+  --note-mint: oklch(.91 .075 310); --note-peach: oklch(.91 .09 57); --note-lilac: oklch(.9 .06 302);
   --note-ink: oklch(.24 .035 95); --note-muted: oklch(.43 .035 87); --note-media: oklch(.96 .015 88);
   --tape: oklch(.93 .045 87 / .8); --pin: oklch(.55 .19 28);
 }
