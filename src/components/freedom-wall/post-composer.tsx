@@ -19,7 +19,7 @@ export function PostComposer() {
   const reset = () => { setMessage(""); setAuthor(""); setCategory("random"); setColor("yellow"); setMedia(undefined); };
   const onFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]; if (!file) return;
-    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) { toast.error("Choose an image or video file."); return; }
+    if (!file.type.startsWith("image/")) { toast.error("Choose an image"); return; }
     if (file.size > MAX_FILE) { toast.error("Please choose a file under 2 MB for this prototype."); return; }
     const reader = new FileReader(); reader.onload = () => setMedia({ type: file.type.startsWith("image/") ? "image" : "video", dataUrl: String(reader.result), name: file.name }); reader.readAsDataURL(file);
   };
