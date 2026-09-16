@@ -23,9 +23,24 @@ export function WallProvider({ children }: { children: ReactNode }) {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       const reactions = localStorage.getItem(REACTIONS_KEY);
-      if (saved) setPosts(JSON.parse(saved) as WallPost[]);
-      if (reactions) setReactedIds(JSON.parse(reactions) as string[]);
-    } catch { toast.error("Saved notes could not be loaded."); }
+
+      if (saved) {
+        const parsed = JSON.parse(saved) as WallPost[] | null;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setPosts(parsed);
+        } else if (Array.isArray(parsed) && parsed.length === 0) {
+          localStorage.removeItem(STORAGE_KEY);
+          setPosts(seedPosts);
+        }
+      }
+
+      if (reactions) {
+        const parsed = JSON.parse(reactions) as string[] | null;
+        if (Array.isArray(parsed)) setReactedIds(parsed);
+      }
+    } catch {
+      toast.error("Saved notes could not be loaded.");
+    }
     setHydrated(true);
   }, []);
 
@@ -70,7 +85,7 @@ export function WallProvider({ children }: { children: ReactNode }) {
     setPosts((current) => current.map((post) => post.id === id ? { ...post, status } : post));
   }, []);
   const deletePost = useCallback((id: string) => setPosts((current) => current.filter((post) => post.id !== id)), []);
-  const resetDemo = useCallback(() => { setPosts(seedPosts); setReactedIds([]); localStorage.removeItem(LAST_POST_KEY); toast.success("Demo wall restored."); }, []);
+  const resetDemo = useCallback(() => { setPosts(seedPosts); setReactedIds([]); localStorage.removeItem(LAST_POST_KEY); localStorage.removeItem(STORAGE_KEY); toast.success("Demo wall restored."); }, []);
 
   const value = useMemo(() => ({ posts, reactedIds, hydrated, addPost, react, moderate, deletePost, resetDemo, composerOpen, setComposerOpen }), [posts, reactedIds, hydrated, addPost, react, moderate, deletePost, resetDemo, composerOpen]);
   return <WallContext.Provider value={value}>{children}</WallContext.Provider>;
