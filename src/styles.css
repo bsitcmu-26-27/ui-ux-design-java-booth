@@ -27,7 +27,7 @@
 }
 :root {
   --radius: .4rem;
-  --background: oklch(.975 .012 88); --foreground: oklch(.22 .035 151);
+  --background: oklch(.975 .012 88); --foreground: oklch(.22 .035 300);
   --card: oklch(.99 .008 88); --card-foreground: var(--foreground); --popover: var(--card); --popover-foreground: var(--foreground);
   --primary: #461D7C; --primary-foreground: oklch(.98 .008 90);
   --secondary: oklch(.91 .055 300); --secondary-foreground: oklch(.28 .085 300);
@@ -85,11 +85,9 @@
 @utility note-card {
   border: 1px solid color-mix(in oklab, var(--color-note-ink) 8%, transparent);
   border-radius: 2px;
-  position: relative;
-  z-index: 0;
   box-shadow: 0 13px 24px -15px color-mix(in oklab, var(--color-note-ink) 38%, transparent), 0 2px 3px color-mix(in oklab, var(--color-note-ink) 10%, transparent);
   transition: transform .2s ease, box-shadow .2s ease;
-  &:hover { transform: rotate(0deg) translateY(-3px); box-shadow: 0 18px 28px -14px color-mix(in oklab, var(--color-note-ink) 44%, transparent); z-index: 0; }
+  &:hover { transform: rotate(0deg) translateY(-3px); box-shadow: 0 18px 28px -14px color-mix(in oklab, var(--color-note-ink) 44%, transparent); z-index: 2; }
 }
 @utility no-scrollbar { scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
