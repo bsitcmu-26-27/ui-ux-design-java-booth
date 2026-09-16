@@ -74,7 +74,9 @@ export const LAST_POST_KEY = "cmu-freedom-wall-last-post-v1";
 export const blockedKeywords = ["threat", "violence", "bully", "hate speech"];
 
 export function categoryFor(id: CategoryId) {
-  return categories.find((category) => category.id === id) ?? categories[categories.length - 1];
+  // The explicit non-null assertion is justified by the `other` entry above and
+  // keeps this helper total under `noUncheckedIndexedAccess`.
+  return categories.find((category) => category.id === id) ?? categories.find((category) => category.id === "other")!;
 }
 
 export function isCategoryId(value: unknown): value is CategoryId {
