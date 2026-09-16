@@ -29,6 +29,38 @@ function isWallPost(value: unknown): value is WallPost {
     && typeof post.y === "number";
 }
 
+function readStoredPosts(): WallPost[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return seedPosts;
+
+    const parsed: unknown = JSON.parse(raw);
+    const posts = Array.isArray(parsed) ? parsed.filter(isWallPost) : [];
+
+    if (posts.length === 0) {
+      localStorage.removeItem(STORAGE_KEY);
+      return seedPosts;
+    }
+
+    return posts;
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+    return seedPosts;
+  }
+}
+
+function readStoredReactionIds(): string[] {
+  try {
+    const raw = localStorage.getItem(REACTIONS_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    localStorage.removeItem(REACTIONS_KEY);
+    return [];
+  }
+}
+
 export function WallProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<WallPost[]>(seedPosts);
   const [reactedIds, setReactedIds] = useState<string[]>([]);
@@ -37,37 +69,23 @@ export function WallProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const reactions = localStorage.getItem(REACTIONS_KEY);
-
-      if (saved) {
-        const parsed: unknown = JSON.parse(saved);
-        const validPosts = Array.isArray(parsed) ? parsed.filter(isWallPost) : [];
-        if (validPosts.length > 0) {
-          setPosts(validPosts);
-        } else {
-          localStorage.removeItem(STORAGE_KEY);
-          setPosts(seedPosts);
-        }
-      }
-
-      if (reactions) {
-        const parsed: unknown = JSON.parse(reactions);
-        if (Array.isArray(parsed)) {
-          setReactedIds(parsed.filter((id): id is string => typeof id === "string"));
-        }
-      }
+      setPosts(readStoredPosts());
+      setReactedIds(readStoredReactionIds());
     } catch {
-      localStorage.removeItem(STORAGE_KEY);
       setPosts(seedPosts);
+      setReactedIds([]);
       toast.error("Saved notes could not be loaded. Demo notes restored.");
+    } finally {
+      setHydrated(true);
     }
-    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+    if (hydrated && posts.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+    }
   }, [posts, hydrated]);
+
   useEffect(() => {
     if (hydrated) localStorage.setItem(REACTIONS_KEY, JSON.stringify(reactedIds));
   }, [reactedIds, hydrated]);
@@ -76,27 +94,42 @@ export function WallProvider({ children }: { children: ReactNode }) {
     const message = draft.message.trim();
     if (!message) return { ok: false, error: "Write a thought before posting." };
     if (message.length > 500) return { ok: false, error: "Keep your thought within 500 characters." };
+
     const normalized = message.toLowerCase().replace(/\s+/g, " ");
     const now = Date.now();
     try {
       const previous = JSON.parse(localStorage.getItem(LAST_POST_KEY) ?? "null") as { text: string; at: number } | null;
       if (previous && previous.text === normalized && now - previous.at < 10 * 60 * 1000) return { ok: false, error: "That looks like a recent duplicate. Try sharing something new." };
       if (previous && now - previous.at < 8000) return { ok: false, error: "Take a breath before posting another note." };
-    } catch { /* Invalid prototype metadata can be safely ignored. */ }
+    } catch {
+      localStorage.removeItem(LAST_POST_KEY);
+    }
+
     const flagged = blockedKeywords.some((keyword) => normalized.includes(keyword));
     const status: "approved" | "pending" = flagged ? "pending" : "approved";
     const post: WallPost = {
-      ...draft, message, author: draft.author.trim() || "Anonymous yarn?", id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(), reactions: 0, status,
-      isSeed: false, x: 140 + Math.random() * 1250, y: 120 + Math.random() * 850,
+      ...draft,
+      message,
+      author: draft.author.trim() || "Anonymous yarn?",
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      reactions: 0,
+      status,
+      isSeed: false,
+      x: 140 + Math.random() * 1250,
+      y: 120 + Math.random() * 850,
     };
+
     setPosts((current) => [post, ...current]);
     localStorage.setItem(LAST_POST_KEY, JSON.stringify({ text: normalized, at: now }));
     return { ok: true, status };
   }, []);
 
   const react = useCallback((id: string) => {
-    if (reactedIds.includes(id)) { toast("You already sent love to this note."); return; }
+    if (reactedIds.includes(id)) {
+      toast("You already sent love to this note.");
+      return;
+    }
     setPosts((current) => current.map((post) => post.id === id ? { ...post, reactions: post.reactions + 1 } : post));
     setReactedIds((current) => [...current, id]);
   }, [reactedIds]);
@@ -105,7 +138,14 @@ export function WallProvider({ children }: { children: ReactNode }) {
     setPosts((current) => current.map((post) => post.id === id ? { ...post, status } : post));
   }, []);
   const deletePost = useCallback((id: string) => setPosts((current) => current.filter((post) => post.id !== id)), []);
-  const resetDemo = useCallback(() => { setPosts(seedPosts); setReactedIds([]); localStorage.removeItem(LAST_POST_KEY); localStorage.removeItem(STORAGE_KEY); toast.success("Demo wall restored."); }, []);
+  const resetDemo = useCallback(() => {
+    setPosts(seedPosts);
+    setReactedIds([]);
+    localStorage.removeItem(LAST_POST_KEY);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(seedPosts));
+    localStorage.removeItem(REACTIONS_KEY);
+    toast.success("Demo wall restored.");
+  }, []);
 
   const value = useMemo(() => ({ posts, reactedIds, hydrated, addPost, react, moderate, deletePost, resetDemo, composerOpen, setComposerOpen }), [posts, reactedIds, hydrated, addPost, react, moderate, deletePost, resetDemo, composerOpen]);
   return <WallContext.Provider value={value}>{children}</WallContext.Provider>;
