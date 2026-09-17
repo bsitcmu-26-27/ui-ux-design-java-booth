@@ -2,12 +2,13 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { toast } from "sonner";
 import { REACTIONS_KEY, type WallPost } from "@/lib/freedom-wall";
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "https://experienced-anthe-nisheri-ascar-2970fad8.koyeb.app/";
+const API_BASE = "https://experienced-anthe-nisheri-ascar-2970fad8.koyeb.app/";
 type NewPost = Omit<WallPost, "id" | "createdAt" | "reactions" | "status" | "isSeed" | "x" | "y">;
 type SubmitResult = { ok: true; status: "approved" | "pending" } | { ok: false; error: string };
 type WallContextValue = {
   posts: WallPost[]; reactedIds: string[]; hydrated: boolean;
-   addPost: (post: NewPost) => Promise<SubmitResult>; react: (id: string) => void;1
+  addPost: (post: NewPost) => Promise<SubmitResult>; react: (id: string) => void;
+  updatePosition: (id: string, x: number, y: number) => voidrwe
   moderate: (id: string, status: WallPost["status"]) => void; deletePost: (id: string) => void;
   resetDemo: () => void; composerOpen: boolean; setComposerOpen: (open: boolean) => void;
 };
@@ -150,6 +151,20 @@ export function WallProvider({ children }: { children: ReactNode }) {
     }
   }, [reactedIds]);
 
+  const updatePosition = useCallback(async (id: string, x: number, y: number) => {
+  setPosts((current) => current.map((post) => post.id === id ? { ...post, x, y } : post));
+  try {
+    const res = await fetch(`${API_BASE}/posts/${id}/position`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ x, y }),
+    });
+    if (!res.ok) throw new Error();
+  } catch {
+    toast.error("Position didn't save.");
+    }
+  }, []);
+
   const moderate = useCallback(async (id: string, status: WallPost["status"]) => {
     setPosts((current) => current.map((post) => post.id === id ? { ...post, status } : post));
     try {
@@ -184,7 +199,7 @@ export function WallProvider({ children }: { children: ReactNode }) {
     toast.success("Wall refreshed.");
   }, [fetchPosts]);
 
-  const value = useMemo(() => ({ posts, reactedIds, hydrated, addPost, react, moderate, deletePost, resetDemo, composerOpen, setComposerOpen }), [posts, reactedIds, hydrated, addPost, react, moderate, deletePost, resetDemo, composerOpen]);
+  const value = useMemo(() => ({ posts, reactedIds, hydrated, addPost, react, moderate, deletePost, updatePosition, resetDemo, composerOpen, setComposerOpen }), [posts, reactedIds, hydrated, addPost, react, moderate, deletePost, updatePosition, resetDemo, composerOpen]);
   return <WallContext.Provider value={value}>{children}</WallContext.Provider>;
 }
 
