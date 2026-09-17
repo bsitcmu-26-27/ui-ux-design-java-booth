@@ -1,4 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CanvasBoard } from "@/components/freedom-wall/canvas-board";
 export const Route = createFileRoute("/canvas")({ head: () => ({ meta: [{ title: "Canvas — CMU Freedom Wall" }, { name: "description", content: "Explore CMU student notes across an interactive digital corkboard." }, { property: "og:title", content: "Interactive Canvas — CMU Freedom Wall" }, { property: "og:description", content: "Pan, zoom, and explore student voices on the digital corkboard." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: CanvasPage });
-function CanvasPage() { return <main><div className="flex h-20 items-center justify-between border-b bg-background px-5 md:px-8"><div><h1 className="font-display text-2xl md:text-3xl">The big canvas</h1><p className="text-xs text-muted-foreground">Every note has a place here.</p></div></div><CanvasBoard /></main>; }
+function CanvasPage() { return <main><CanvasBoard /></main>; }
