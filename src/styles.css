@@ -68,7 +68,7 @@
   pointer-events: none;
   filter: blur(52px) saturate(125%);
   opacity: .85;
-  displat: none;
+  display: none;
   background-image:
     radial-gradient(ellipse 40% 35% at 22% 18%, oklch(.7 .19 50 / .8), transparent 70%),
     radial-gradient(ellipse 35% 45% at 78% 30%, oklch(.75 .17 70 / .7), transparent 70%),
