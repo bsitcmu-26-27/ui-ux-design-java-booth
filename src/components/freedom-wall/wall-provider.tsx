@@ -15,7 +15,8 @@ type WallContextValue = {
 
 function withAbsoluteMedia(post: WallPost): WallPost {
   if (!post.media) return post;
-  return { ...post, media: { ...post.media, dataUrl: `${API_BASE}${post.media.dataUrl}` } };
+  const url = post.media.dataUrl.startsWith("http") ? post.media.dataUrl : `${API_BASE}${post.media.dataUrl}`;
+  return { ...post, media: { ...post.media, dataUrl: url } };
 }
 
 const WallContext = createContext<WallContextValue | null>(null);
