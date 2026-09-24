@@ -29,7 +29,7 @@ export function PostComposer() {
   const [author, setAuthor] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
   const turnstileRef = useRef<HTMLDivElement>(null);
-  /*
+
   useEffect(() => {
     (window as any).onTurnstileVerify = (token: string) =>
       setCaptchaToken(token)(window as any).turnstile?.render(turnstileRef.current, {
@@ -37,7 +37,7 @@ export function PostComposer() {
         callback: "onTurnstileVerify",
       });
   }, []);
-*/
+
   const [category, setCategory] = useState<CategoryId>("random");
   const [color, setColor] = useState<NoteColor>("yellow");
   const [media, setMedia] = useState<Media>();
@@ -68,19 +68,20 @@ export function PostComposer() {
   };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!passcode.trim()) {
-      toast.error("Enter the booth passcode to post.");
+    if (!captchaToken) {
+      toast.error("Complete the captcha to post");
       return;
     }
     const result = await addPost(
       { message, author, category, color, ...(media ? { media } : {}) },
-      passcode.trim(),
+      captchaToken,
     );
     if (!result.ok) {
       toast.error(result.error);
       return;
     }
     setComposerOpen(false);
+    (window as any).turnstile?.reset(turnstileRef.current);
     reset();
     if (result.status === "pending")
       toast("Your note is safe with us", {
@@ -226,17 +227,7 @@ export function PostComposer() {
               Some notes may pause for review.
             </p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="passcode">Booth passcode</Label>
-            <Input
-              id="passcode"
-              type="password"
-              value={passcode}
-              onChange={(e) => setPasscode(e.target.value)}
-              placeholder="Ask a volunteer at the booth"
-              className="bg-surface"
-            />
-          </div>
+          <div ref={turnstileRef} className="cf-turnstile" />
           <Button type="submit" size="lg" className="w-full">
             Pin it to the wall
           </Button>

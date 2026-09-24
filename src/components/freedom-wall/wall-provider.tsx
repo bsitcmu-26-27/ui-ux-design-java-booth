@@ -10,7 +10,8 @@ import {
 import { toast } from "sonner";
 import { REACTIONS_KEY, type WallPost } from "@/lib/freedom-wall";
 
-const API_BASE = "https://experienced-anthe-nisheri-ascar-2970fad8.koyeb.app/";
+const API_BASE = import.meta.env.API_BASE;
+console.log(API_BASE)
 type NewPost = Omit<WallPost, "id" | "createdAt" | "reactions" | "status" | "isSeed" | "x" | "y">;
 type SubmitResult = { ok: true; status: "approved" | "pending" } | { ok: false; error: string };
 type WallContextValue = {
@@ -150,7 +151,7 @@ export function WallProvider({ children }: { children: ReactNode }) {
     if (hydrated) localStorage.setItem(REACTIONS_KEY, JSON.stringify(reactedIds));
   }, [reactedIds, hydrated]);
 
-  const addPost = useCallback(async (draft: NewPost, passcode: string): Promise<SubmitResult> => {
+  const addPost = useCallback(async (draft: NewPost, captchToken: string): Promise<SubmitResult> => {
     const message = draft.message.trim();
     if (!message) return { ok: false, error: "Write a thought before posting." };
     if (message.length > 500)
@@ -163,7 +164,7 @@ export function WallProvider({ children }: { children: ReactNode }) {
     form.append("color", draft.color);
     form.append("x", String(140 + Math.random() * 1250));
     form.append("y", String(120 + Math.random() * 850));
-    form.append("passcode", passcode);
+    form.append("captcha_token", captchaToken);
     if (draft.media) {
       // media.dataUrl is a base64 data: URL from the composer's preview step —
       // fetch() can turn that back into a real Blob to send as multipart
