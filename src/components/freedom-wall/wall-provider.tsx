@@ -10,7 +10,7 @@ import {
 import { toast } from "sonner";
 import { REACTIONS_KEY, type WallPost } from "@/lib/freedom-wall";
 
-const API_BASE = import.meta.env.API_BASE;
+const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 console.log(API_BASE)
 type NewPost = Omit<WallPost, "id" | "createdAt" | "reactions" | "status" | "isSeed" | "x" | "y">;
 type SubmitResult = { ok: true; status: "approved" | "pending" } | { ok: false; error: string };
