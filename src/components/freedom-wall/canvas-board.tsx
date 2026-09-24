@@ -2,17 +2,11 @@ import { useRef, useState, type PointerEvent, type WheelEvent } from "react";
 import { motion, type PanInfo } from "framer-motion";
 import { LocateFixed, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { NoteCard } from "./note-card";
 import { useWall } from "./wall-provider";
 
 export function CanvasBoard() {
-
   const { posts, reactedIds, react, updatePosition } = useWall();
   const approved = posts.filter((post) => post.status === "approved");
 
@@ -47,8 +41,12 @@ export function CanvasBoard() {
         className="relative h-[calc(100vh-9.5rem)] min-h-[620px] overflow-hidden bg-cork cursor-grab active:cursor-grabbing touch-none"
         onPointerDown={down}
         onPointerMove={move}
-        onPointerUp={() => { drag.current = null; }}
-        onPointerCancel={() => { drag.current = null; }}
+        onPointerUp={() => {
+          drag.current = null;
+        }}
+        onPointerCancel={() => {
+          drag.current = null;
+        }}
         onWheel={wheel}
       >
         <div aria-hidden className="flame-glow absolute -inset-[10%]" />
@@ -70,11 +68,7 @@ export function CanvasBoard() {
                 updatePosition(post.id, newX, newY);
               }}
             >
-              <NoteCard
-                post={post}
-                reacted={reactedIds.includes(post.id)}
-                onReact={react}
-              />
+              <NoteCard post={post} reacted={reactedIds.includes(post.id)} onReact={react} />
             </motion.div>
           ))}
         </div>

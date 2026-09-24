@@ -12,7 +12,7 @@ export function useFilteredPosts(
   posts: WallPost[] = [],
   search: string,
   category: "all" | CategoryId,
-  sort: Sort
+  sort: Sort,
 ) {
   return useMemo(() => {
     if (!Array.isArray(posts)) return [];

@@ -3,7 +3,6 @@ import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 //import { PUBLIC_URL_ROOT } from "../public_url_root.config";
 
-
 export const getRouter = () => {
   const queryClient = new QueryClient();
 
@@ -12,7 +11,7 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
-    basepath: __PUBLIC_URL_ROOT__
+    basepath: __PUBLIC_URL_ROOT__,
   });
 
   return router;

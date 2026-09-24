@@ -84,7 +84,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Freedom Wall — CMU Digital Edition" },
-      { name: "description", content: "A digital freedom wall for Central Mindanao University student voices." },
+      {
+        name: "description",
+        content: "A digital freedom wall for Central Mindanao University student voices.",
+      },
       { name: "author", content: "CMU CISC Students" },
     ],
     links: [
@@ -95,7 +98,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Kalam:wght@400;700&family=Newsreader:opsz,wght@6..72,600;6..72,700&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Kalam:wght@400;700&family=Newsreader:opsz,wght@6..72,600;6..72,700&display=swap",
+      },
     ],
   }),
   component: RootComponent,
@@ -126,7 +132,9 @@ function RootComponent() {
         <WallProvider>
           <div className="flex min-h-screen flex-col">
             <SiteHeader />
-            <div className="flex-1"><Outlet /></div>
+            <div className="flex-1">
+              <Outlet />
+            </div>
             <SiteFooter />
           </div>
           <PostComposer />
