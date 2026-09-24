@@ -14,7 +14,17 @@ const MAX_FILE = 2 * 1024 * 1024;
 export function PostComposer() {
   const { composerOpen, setComposerOpen, addPost } = useWall();
   const [message, setMessage] = useState(""); const [author, setAuthor] = useState("");
-  const [passcode, setPasscode] = useState("");
+  const [captchaToken, setCaptchaToken] - useState("");
+  const turnstileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+	  (window as any).onTurnstileVerify = (token: string) => setCaptchaToken(token)
+	  (window as any).turnstile?.render(turnstileRef.current, {
+		  sitekey: "0x4AAAAAAFBq5Kl9pidQBdYC";
+		  callback: "onTurnstileVerify",
+	  });
+  }, []);
+
   const [category, setCategory] = useState<CategoryId>("random"); const [color, setColor] = useState<NoteColor>("yellow");
   const [media, setMedia] = useState<Media>(); const fileRef = useRef<HTMLInputElement>(null);
   const reset = () => { setMessage(""); setAuthor(""); setPasscode(""); setCategory("random"); setColor("yellow"); setMedia(undefined); };
