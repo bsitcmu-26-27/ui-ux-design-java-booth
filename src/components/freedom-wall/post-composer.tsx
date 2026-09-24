@@ -31,12 +31,22 @@ export function PostComposer() {
   const turnstileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    (window as any).onTurnstileVerify = (token: string) => setCaptchaToken(token);
+    if(!composerOpen || !turnstileRef.current){
+      return;
+    }
+    const renderWidget = () => {
     (window as any).turnstile?.render(turnstileRef.current, {
         sitekey: "0x4AAAAAAFBq5Kl9pidQBdYC",
         callback: "onTurnstileVerify",
       });
-  }, []);
+  };
+
+  if ((window as any).turnstile) {
+    renderWidget();
+  } else {
+    (window as any).onloadTurnstileCallback = renderWidget;
+  }
+}, [composerOpen]);
 
   const [category, setCategory] = useState<CategoryId>("random");
   const [color, setColor] = useState<NoteColor>("yellow");
@@ -45,7 +55,6 @@ export function PostComposer() {
   const reset = () => {
     setMessage("");
     setAuthor("");
-    setPasscode("");
     setCategory("random");
     setColor("yellow");
     setMedia(undefined);
