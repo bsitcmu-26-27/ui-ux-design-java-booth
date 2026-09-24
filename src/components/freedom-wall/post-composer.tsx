@@ -28,25 +28,35 @@ export function PostComposer() {
   const [message, setMessage] = useState("");
   const [author, setAuthor] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
+  const [turnstileReady, setTurnstileReady] = useState(false);
   const turnstileRef = useRef<HTMLDivElement>(null);
+  const widgetRendered = useRef(false);
 
   useEffect(() => {
-    if(!composerOpen || !turnstileRef.current){
+    if (!composerOpen || !turnstileRef.current || widgetRendered.current) {
       return;
     }
-    const renderWidget = () => {
-    (window as any).turnstile?.render(turnstileRef.current, {
-        sitekey: "0x4AAAAAAFBq5Kl9pidQBdYC",
-        callback: "onTurnstileVerify",
+    let cancelled = false;
+    const tryRender = () => {
+      if (cancelled || widgetRendered.current || !turnstileRef.current) {
+        return;
+      }
+      if (!(window as any).turnstile) {
+        setTimeout(tryRender, 200);
+        return;
+      }
+      widgetRendered.current = true;
+      (window as any).turnstile.render(turnstileRef.current, {
+        sitekey: "0x4AAAAAAFBq5Kl9pidQBdYC", //this is fine, i know what im doing!! >_<
+        callback: (token: string) => setCaptchaToken(token),
       });
-  };
+    };
+    tryRender();
 
-  if ((window as any).turnstile) {
-    renderWidget();
-  } else {
-    (window as any).onloadTurnstileCallback = renderWidget;
-  }
-}, [composerOpen]);
+    return () => {
+      cancelled = true;
+    };
+  }, [composerOpen]);
 
   const [category, setCategory] = useState<CategoryId>("random");
   const [color, setColor] = useState<NoteColor>("yellow");
@@ -90,7 +100,7 @@ export function PostComposer() {
       return;
     }
     setComposerOpen(false);
-    (window as any).turnstile?.reset(turnstileRef.current);
+    //(window as any).turnstile?.reset(turnstileRef.current);
     reset();
     if (result.status === "pending")
       toast("Your note is safe with us", {
