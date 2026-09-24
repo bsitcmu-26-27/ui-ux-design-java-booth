@@ -31,8 +31,8 @@ export function PostComposer() {
   const turnstileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    (window as any).onTurnstileVerify = (token: string) =>
-      setCaptchaToken(token)(window as any).turnstile?.render(turnstileRef.current, {
+    (window as any).onTurnstileVerify = (token: string) => setCaptchaToken(token);
+    (window as any).turnstile?.render(turnstileRef.current, {
         sitekey: "0x4AAAAAAFBq5Kl9pidQBdYC",
         callback: "onTurnstileVerify",
       });
